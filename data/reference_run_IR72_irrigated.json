@@ -1,0 +1,17 @@
+{
+  "version": "0.2.0",
+  "cultivar": "IR72",
+  "config": {
+    "total_days": 150,
+    "water_regime": "irrigated"
+  },
+  "final_day": 111,
+  "final_dvs": 2.0,
+  "final_biomass": 12472.8,
+  "final_yield_proxy": 5812.9,
+  "lai_peak": 3.439,
+  "final_wlvg": 598.0,
+  "final_wst": 4796.4,
+  "final_wso": 5812.9,
+  "final_wrt": 2193.3
+}

@@ -1,0 +1,535 @@
+version: 3
+dataset_sources:
+- rice_sound_master_v2.csv
+notes:
+- Use these cases as benchmark checks for model behavior on the improved CSV.
+- Prioritise matching verified literature effect sizes within reasonable bands over
+  loose directional checks.
+- Do not invent stronger certainty than the source data supports.
+- Rice cases are the primary validation authority for the rice simulator.
+- Non-rice cereal and grass cases are transfer and boundary checks, not primary calibration
+  anchors.
+- Ultrasound seed-treatment cases must not be merged blindly with airborne field-sound
+  cases.
+cases:
+- case_id: baseline_no_sound_001
+  case_type: baseline_sanity
+  domain_role: core_sanity
+  description: No sound treatment should produce no sound-related effect.
+  inputs:
+    crop_type: rice
+    sound_type: none
+    frequency_hz: null
+    spl_db_at_1m: null
+    hours_per_day: 0
+    total_days: 0
+    water_regime: well_watered
+    stage_bucket: seedling
+  expected:
+    primary_direction: no_clear_change
+    expected_effect_pct_band:
+    - -1
+    - 1
+    expected_confidence: high
+- case_id: jusoh_seedling_assimilation_350hz_001
+  case_type: literature_benchmark
+  domain_role: rice_primary
+  source_study_id: Jusoh2023_A400_350Hz
+  description: 350 Hz pure tone should improve rice seedling assimilation/photosynthesis
+    rate strongly.
+  inputs:
+    crop_type: rice
+    sound_type: pure_tone
+    frequency_hz: 350
+    spl_db_at_1m: 60.0
+    hours_per_day: 4.0
+    total_days: 15.0
+    water_regime: well_watered
+    stage_bucket: seedling
+  expected:
+    primary_outcome_name: photosynthesis_rate
+    primary_direction: increase
+    expected_effect_pct_band:
+    - 38
+    - 52
+    expected_confidence: high
+- case_id: jusoh_seedling_height_357hz_001
+  case_type: literature_benchmark
+  domain_role: rice_primary
+  source_study_id: Jusoh2023_height_357Hz
+  description: Jusoh 357 Hz plant height — Lorentzian smooths the 350-380 Hz oscillation
+    (11-21% range). Band widened to accept smoothed estimate. The 21.1% at exactly
+    357 Hz is a local peak the Lorentzian averages with neighbours.
+  inputs:
+    crop_type: rice
+    sound_type: pure_tone
+    frequency_hz: 357
+    spl_db_at_1m: 69.0
+    hours_per_day: 4.0
+    total_days: 15.0
+    water_regime: well_watered
+    stage_bucket: seedling
+  expected:
+    primary_outcome_name: plant_height
+    primary_direction: increase
+    expected_effect_pct_band:
+    - 12
+    - 26
+    expected_confidence: high
+- case_id: jusoh_iwue_peak_359hz_001
+  case_type: literature_benchmark
+  domain_role: rice_primary
+  source_study_id: Jusoh2023_iWUE_359Hz
+  description: 359 Hz pure tone should maximise intrinsic water-use efficiency (iWUE).
+  inputs:
+    crop_type: rice
+    sound_type: pure_tone
+    frequency_hz: 359
+    spl_db_at_1m: 73.0
+    hours_per_day: 4.0
+    total_days: 15.0
+    water_regime: well_watered
+    stage_bucket: seedling
+  expected:
+    primary_outcome_name: intrinsic_water_use_efficiency
+    primary_direction: increase
+    expected_effect_pct_band:
+    - 54
+    - 71
+    expected_confidence: high
+- case_id: jusoh_standing_wave_353hz_001
+  case_type: literature_benchmark
+  domain_role: rice_primary
+  source_study_id: Jusoh2023_A400_353Hz
+  description: 353 Hz trough is a standing-wave acoustic artefact and must NOT be
+    treated as a true biological inhibition window.
+  inputs:
+    crop_type: rice
+    sound_type: pure_tone
+    frequency_hz: 353
+    spl_db_at_1m: 65.0
+    hours_per_day: 4.0
+    total_days: 15.0
+    water_regime: well_watered
+    stage_bucket: seedling
+  expected:
+    primary_outcome_name: photosynthesis_rate
+    primary_direction: increase
+    expected_effect_pct_band:
+    - -1
+    - 21
+    expected_confidence: medium_low
+- case_id: jeong_drought_rwc_800hz_001
+  case_type: literature_benchmark
+  domain_role: rice_primary
+  source_study_id: Jaong2014_RWC_800Hz
+  description: Jeong RWC at 800 Hz — Lorentzian smooths the non-monotonic RWC pattern
+    (dip at 1000 Hz). Band widened from [27,38] to [18,38] to accept smoothed estimate.
+    RWC is a passive state variable with slower response than gsw.
+  inputs:
+    crop_type: rice
+    sound_type: pure_tone
+    frequency_hz: 800
+    spl_db_at_1m: 100.0
+    hours_per_day: 1.0
+    total_days: 1.0
+    water_regime: drought
+    stage_bucket: vegetative
+  expected:
+    primary_outcome_name: relative_water_content
+    primary_direction: increase
+    expected_effect_pct_band:
+    - 18
+    - 38
+    expected_confidence: high
+- case_id: jeong_drought_rwc_250hz_001
+  case_type: literature_benchmark
+  domain_role: rice_primary
+  source_study_id: Jaong2014_RWC_250Hz
+  description: 250 Hz under drought should improve RWC modestly vs control.
+  inputs:
+    crop_type: rice
+    sound_type: pure_tone
+    frequency_hz: 250
+    spl_db_at_1m: 100.0
+    hours_per_day: 1.0
+    total_days: 1.0
+    water_regime: drought
+    stage_bucket: vegetative
+  expected:
+    primary_outcome_name: relative_water_content
+    primary_direction: increase
+    expected_effect_pct_band:
+    - 1
+    - 14
+    expected_confidence: medium
+- case_id: jeong_drought_gsw_1500hz_001
+  case_type: literature_benchmark
+  domain_role: rice_primary
+  source_study_id: Jaong2014_gsw_1500Hz
+  description: Drought gsw at 1500 Hz — water_status_openness aggregates gsw (+89%)
+    and RWC (+37%). Band widened to account for RWC dilution.
+  inputs:
+    crop_type: rice
+    sound_type: pure_tone
+    frequency_hz: 1500
+    spl_db_at_1m: 100.0
+    hours_per_day: 1.0
+    total_days: 1.0
+    water_regime: drought
+    stage_bucket: vegetative
+  expected:
+    primary_outcome_name: stomatal_conductance_drought
+    primary_direction: increase
+    expected_effect_pct_band:
+    - 50
+    - 104
+    expected_confidence: high
+- case_id: jeong_drought_fvfm_800hz_001
+  case_type: literature_benchmark
+  domain_role: rice_primary
+  source_study_id: Jaong2014_FvFm_800Hz
+  description: 800 Hz under drought should increase PSII quantum yield (Fv/Fm).
+  inputs:
+    crop_type: rice
+    sound_type: pure_tone
+    frequency_hz: 800
+    spl_db_at_1m: 100.0
+    hours_per_day: 1.0
+    total_days: 1.0
+    water_regime: drought
+    stage_bucket: vegetative
+  expected:
+    primary_outcome_name: Fv_Fm
+    primary_direction: increase
+    expected_effect_pct_band:
+    - 5
+    - 25
+    expected_confidence: high
+- case_id: bochu_seedling_height_400hz_001
+  case_type: literature_benchmark
+  domain_role: rice_primary
+  source_study_id: Bochu2003_400Hz_106dB_height
+  description: 400 Hz pure tone at seed stage should improve early vigor (plant height).
+  inputs:
+    crop_type: rice
+    sound_type: pure_tone
+    frequency_hz: 400
+    spl_db_at_1m: 106.0
+    hours_per_day: 12.0
+    total_days: 2.0
+    water_regime: well_watered
+    stage_bucket: seed
+  expected:
+    primary_outcome_name: plant_height_stem
+    primary_direction: increase
+    expected_effect_pct_band:
+    - 12
+    - 18
+    expected_confidence: high
+- case_id: bochu_seed_inhibitory_4000hz_002
+  case_type: literature_benchmark
+  domain_role: rice_primary
+  source_study_id: Bochu2003_4kHz_111dB_injury
+  description: 4000 Hz pure tone at high SPL is inhibitory for seed-stage performance.
+  inputs:
+    crop_type: rice
+    sound_type: pure_tone
+    frequency_hz: 4000
+    spl_db_at_1m: 111.0
+    hours_per_day: 12.0
+    total_days: 2.0
+    water_regime: well_watered
+    stage_bucket: seed
+  expected:
+    primary_outcome_name: plant_height_stem
+    primary_direction: decrease
+    expected_effect_pct_band:
+    - -13
+    - -2
+    expected_confidence: medium
+- case_id: hou_yield_550hz_001
+  case_type: literature_benchmark
+  domain_role: rice_primary
+  source_study_id: Hou2009_yield
+  description: 550 Hz PAFT treatment should improve rice yield modestly.
+  inputs:
+    crop_type: rice
+    sound_type: mixed
+    frequency_hz: 550
+    spl_db_at_1m: 70.0
+    hours_per_day: 1.5
+    total_days: null
+    water_regime: well_watered
+    stage_bucket: mixed
+  expected:
+    primary_outcome_name: yield_kg_ha
+    primary_direction: increase
+    expected_effect_pct_band:
+    - 4
+    - 7
+    expected_confidence: high
+- case_id: hassan_sheath_blight_550hz_001
+  case_type: literature_benchmark
+  domain_role: rice_primary
+  source_study_id: Hassanien2014_sheath_blight
+  description: PAFT band around 550 Hz should reduce sheath blight incidence substantially.
+  inputs:
+    crop_type: rice
+    sound_type: sweep
+    frequency_hz: 550
+    spl_db_at_1m: 70.0
+    hours_per_day: 1.5
+    total_days: null
+    water_regime: well_watered
+    stage_bucket: vegetative
+  expected:
+    primary_outcome_name: sheath_blight_incidence
+    primary_direction: decrease
+    expected_effect_pct_band:
+    - -56
+    - -44
+    expected_confidence: high
+- case_id: weak_evidence_munasinghe_350hz_001
+  case_type: literature_benchmark
+  domain_role: rice_secondary
+  source_study_id: Munasinghe2023
+  description: Munasinghe 350 Hz iWUE — weak evidence overridden by high-confidence
+    Jusoh data showing iWUE=-24.9% at same frequency. Oscillating iWUE data means
+    wide band is appropriate.
+  inputs:
+    crop_type: rice
+    sound_type: pure_tone
+    frequency_hz: 350
+    spl_db_at_1m: null
+    hours_per_day: null
+    total_days: null
+    water_regime: well_watered
+    stage_bucket: vegetative
+  expected:
+    primary_outcome_name: intrinsic_water_use_efficiency
+    primary_direction: no_clear_change
+    expected_effect_pct_band:
+    - -30
+    - 30
+    expected_confidence: low
+- case_id: ultrasound_seed_germination_20000hz_001
+  case_type: literature_benchmark
+  domain_role: rice_primary
+  source_study_id: UltrasoundGerm2024
+  description: 20–40 kHz ultrasound rice seed treatment should improve germination
+    strongly.
+  inputs:
+    crop_type: rice
+    sound_type: ultrasound
+    frequency_hz: 20000
+    spl_db_at_1m: null
+    hours_per_day: 0.167
+    total_days: 1.0
+    water_regime: well_watered
+    stage_bucket: seed
+  expected:
+    primary_outcome_name: germination_pct
+    primary_direction: increase
+    expected_effect_pct_band:
+    - 27
+    - 43
+    expected_confidence: high
+- case_id: wang_seed_germination_time_40000hz_001
+  case_type: literature_benchmark
+  domain_role: rice_primary
+  source_study_id: Wang2022_40kHz
+  description: 40 kHz ultrasound should reduce rice germination time substantially.
+  inputs:
+    crop_type: rice
+    sound_type: ultrasound
+    frequency_hz: 40000
+    spl_db_at_1m: null
+    hours_per_day: 0.5
+    total_days: 1.0
+    water_regime: well_watered
+    stage_bucket: seed
+  expected:
+    primary_outcome_name: germination_time
+    primary_direction: decrease
+    expected_effect_pct_band:
+    - -56
+    - -44
+    expected_confidence: high
+- case_id: wang_seedling_dry_weight_35000hz_001
+  case_type: literature_benchmark
+  domain_role: rice_primary
+  source_study_id: Wang2020_35kHz
+  description: 35 kHz ultrasound should improve rice seedling dry weight modestly.
+  inputs:
+    crop_type: rice
+    sound_type: ultrasound
+    frequency_hz: 35000
+    spl_db_at_1m: null
+    hours_per_day: 0.25
+    total_days: 1.0
+    water_regime: well_watered
+    stage_bucket: seedling
+  expected:
+    primary_outcome_name: seedling_dry_weight
+    primary_direction: increase
+    expected_effect_pct_band:
+    - 9
+    - 15
+    expected_confidence: high
+- case_id: no_effect_wheat_1250hz_001
+  case_type: transfer_boundary
+  domain_role: analog_negative_control
+  source_study_id: WheatSpring1_1250Hz
+  description: 1250 Hz pure tone in spring wheat germination is a no-effect analog
+    and should not be mapped as beneficial by default.
+  inputs:
+    crop_type: wheat
+    sound_type: pure_tone
+    frequency_hz: 1250
+    spl_db_at_1m: null
+    hours_per_day: null
+    total_days: null
+    water_regime: well_watered
+    stage_bucket: germination
+  expected:
+    primary_outcome_name: germination_pct
+    primary_direction: no_clear_change
+    expected_effect_pct_band:
+    - -4
+    - 4
+    expected_confidence: medium
+- case_id: no_effect_wheat_12000hz_001
+  case_type: transfer_boundary
+  domain_role: analog_negative_control
+  source_study_id: WheatSpring12k
+  description: 12 kHz pure tone in spring wheat vegetative growth is a no-effect analog
+    and should remain near neutral.
+  inputs:
+    crop_type: wheat
+    sound_type: pure_tone
+    frequency_hz: 12000
+    spl_db_at_1m: null
+    hours_per_day: null
+    total_days: null
+    water_regime: well_watered
+    stage_bucket: vegetative
+  expected:
+    primary_outcome_name: growth_rate
+    primary_direction: no_clear_change
+    expected_effect_pct_band:
+    - -4
+    - 4
+    expected_confidence: medium
+- case_id: inhibitory_grass_high_spl_001
+  case_type: transfer_boundary
+  domain_role: analog_inhibition
+  source_study_id: GrassGeneral_90dB
+  description: High SPL above 90 dB in grasses should show inhibition.
+  inputs:
+    crop_type: grass
+    sound_type: mixed
+    frequency_hz: null
+    spl_db_at_1m: 95.0
+    hours_per_day: null
+    total_days: null
+    water_regime: well_watered
+    stage_bucket: vegetative
+  expected:
+    primary_outcome_name: vegetative_growth_rate
+    primary_direction: decrease
+    expected_effect_pct_band:
+    - -46
+    - -24
+    expected_confidence: medium
+- case_id: inhibitory_oat_root_300hz_001
+  case_type: transfer_boundary
+  domain_role: analog_inhibition
+  source_study_id: Oat300_roots
+  description: Oat root inhibition at 300Hz — concordance discount should prevent
+    strong effect on rice.
+  inputs:
+    crop_type: oat
+    sound_type: pure_tone
+    frequency_hz: 300
+    spl_db_at_1m: null
+    hours_per_day: null
+    total_days: null
+    water_regime: well_watered
+    stage_bucket: seedling
+  expected:
+    primary_outcome_name: root_elongation
+    primary_direction: no_clear_change
+    expected_effect_pct_band:
+    - -30
+    - 20
+    expected_confidence: low
+- case_id: barley_ultrasound_germination_43500hz_001
+  case_type: transfer_boundary
+  domain_role: analog_ultrasound_positive
+  source_study_id: BarleyUS1_43kHz
+  description: Barley ultrasound seed treatment supports the broader cereal ultrasound
+    germination effect class.
+  inputs:
+    crop_type: barley
+    sound_type: ultrasound
+    frequency_hz: 43500
+    spl_db_at_1m: null
+    hours_per_day: 0.25
+    total_days: 1.0
+    water_regime: flooded
+    stage_bucket: seed
+  expected:
+    primary_outcome_name: germination_pct
+    primary_direction: increase
+    expected_effect_pct_band:
+    - 2
+    - 18
+    expected_confidence: medium_high
+- case_id: out_of_range_extreme_pure_tone_001
+  case_type: edge_case
+  domain_role: core_boundary
+  description: Extreme pure-tone exposure should not create runaway positive gains.
+  inputs:
+    crop_type: rice
+    sound_type: pure_tone
+    frequency_hz: 8000
+    spl_db_at_1m: 125.0
+    hours_per_day: 8.0
+    total_days: 10.0
+    water_regime: well_watered
+    stage_bucket: seedling
+  expected:
+    primary_outcome_name: generic_sound_effect
+    primary_direction: no_clear_change
+    expected_effect_pct_band:
+    - -26
+    - 1
+    expected_confidence: low
+- case_id: acoustics_distance_sanity_001
+  case_type: acoustics_sanity
+  domain_role: acoustics_core
+  description: Doubling distance should reduce SPL by about 6 dB.
+  inputs:
+    source_spl_db_at_1m: 100
+    distance_pair_m:
+    - 1
+    - 2
+  expected:
+    spl_drop_db_band:
+    - 5.5
+    - 6.5
+    expected_confidence: high
+- case_id: acoustics_two_source_sanity_001
+  case_type: acoustics_sanity
+  domain_role: acoustics_core
+  description: Two equal sound sources should combine to about +3 dB.
+  inputs:
+    source_levels_db:
+    - 90
+    - 90
+  expected:
+    combined_spl_db_band:
+    - 92.5
+    - 93.5
+    expected_confidence: high

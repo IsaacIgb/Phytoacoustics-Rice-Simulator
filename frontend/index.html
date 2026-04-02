@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sound's Affect on Rice Growth — Simulator</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap');
+:root{--bg:#0c0f14;--surface:#141820;--surface2:#1a1f2a;--border:#252b38;--text:#e2e6ee;--text-dim:#7c8494;--accent:#4ade80;--accent-dim:#22633a;--warn:#f59e0b;--danger:#ef4444;--blue:#60a5fa;--purple:#a78bfa;--us:#c084fc;--baseline:#60a5fa;--treated:#4ade80;--rrec:#f59e0b;--radius:8px;--font:'DM Sans',sans-serif;--mono:'JetBrains Mono',monospace;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:1.45;font-size:13px;}
+.app-header{padding:12px 28px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;background:var(--surface);position:sticky;top:0;z-index:10;}
+.app-header h1{font-size:15px;font-weight:600;letter-spacing:-0.01em;}
+.app-header .tag{font-size:10px;padding:2px 7px;background:var(--accent-dim);color:var(--accent);border-radius:20px;font-weight:500;}
+.page{max-width:1100px;margin:0 auto;padding:20px 28px 40px;}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:14px;}
+.panel h3{font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-dim);margin-bottom:10px;font-weight:500;}
+.input-group{margin-bottom:8px;}.input-group label{display:block;font-size:11px;color:var(--text-dim);margin-bottom:2px;}
+.input-group input,.input-group select{width:100%;padding:5px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;transition:border-color .15s;}
+.input-group input:focus,.input-group select:focus{border-color:var(--accent);}
+.input-row{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.slider-group{margin-bottom:10px;}.slider-group .slider-label{display:flex;justify-content:space-between;font-size:12px;color:var(--text-dim);margin-bottom:3px;}
+.slider-group .slider-value{font-family:var(--mono);font-weight:500;font-size:12px;}
+.val-accent{color:var(--accent);}.val-us{color:var(--us);}
+input[type="range"]{width:100%;height:5px;-webkit-appearance:none;appearance:none;background:var(--surface2);border-radius:3px;outline:none;}
+input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;background:var(--accent);border-radius:50%;cursor:pointer;}
+input[type="range"].us-active::-webkit-slider-thumb{background:var(--us);}
+.freq-track{position:relative;height:5px;margin-top:-5px;pointer-events:none;border-radius:3px;overflow:hidden;}
+.freq-track-us{position:absolute;right:0;top:0;height:100%;background:rgba(192,132,252,0.15);border-left:1px dashed rgba(192,132,252,0.4);}
+.freq-labels{display:flex;justify-content:space-between;font-size:9px;color:var(--text-dim);margin-top:2px;}
+.freq-labels .us-label{color:var(--us);font-weight:500;}
+.audio-toggle-btn{width:100%;padding:5px 8px;background:transparent;color:var(--text-dim);border:1px solid var(--border);border-radius:5px;font-family:var(--font);font-size:11px;cursor:pointer;transition:all .15s;margin-bottom:8px;}
+.audio-toggle-btn:hover{border-color:var(--text-dim);color:var(--text);}
+.audio-toggle-btn.audio-active{border-color:var(--accent);color:var(--accent);background:rgba(74,222,128,0.06);}
+.run-btn{padding:12px 24px;background:var(--accent);color:var(--bg);border:none;border-radius:8px;font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer;transition:opacity .15s;width:100%;}
+.run-btn:hover{opacity:0.9;}.run-btn:disabled{opacity:0.4;cursor:not-allowed;}
+.sound-phases{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+.sound-phase{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;}
+.sound-phase.disabled-phase{opacity:0.35;pointer-events:none;}
+.sound-phase h3{font-size:10px;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;font-weight:500;}
+.phase-germ h3{color:var(--warn);}.phase-grow h3{color:var(--accent);}
+.phase-tag{display:inline-block;font-size:9px;padding:1px 6px;border-radius:10px;font-weight:500;margin-left:6px;}
+.tag-germ{background:rgba(245,158,11,0.15);color:var(--warn);}.tag-grow{background:rgba(74,222,128,0.15);color:var(--accent);}
+/* Paddy preview */
+.paddy-vis-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:14px;}
+.paddy-vis-card h3{font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-dim);margin-bottom:8px;font-weight:500;}
+.paddy-vis-inner{width:100%;height:240px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;overflow:hidden;}
+.paddy-vis-inner canvas{display:block;width:100%;height:100%;}
+.paddy-dims{font-size:10px;color:var(--text-dim);font-family:var(--mono);margin-top:3px;}
+/* Results */
+#resultsContent{display:none;}
+.section-title{font-size:14px;font-weight:500;margin-bottom:10px;color:var(--text);}
+/* Toggle bar */
+.toggle-bar{display:flex;gap:4px;margin-bottom:16px;background:var(--surface2);border-radius:6px;padding:3px;}
+.toggle-btn{padding:6px 14px;border:none;background:transparent;color:var(--text-dim);font-family:var(--font);font-size:11px;border-radius:4px;cursor:pointer;transition:all .15s;font-weight:500;}
+.toggle-btn.active{background:var(--surface);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.3);}
+.toggle-btn:hover:not(.active){color:var(--text);}
+/* Carousel nav */
+.nav-btn{background:var(--surface2);border:1px solid var(--border);color:var(--text);width:36px;height:36px;border-radius:50%;font-size:14px;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;}
+.nav-btn:hover{border-color:var(--accent);color:var(--accent);}
+.graph-slide{min-height:200px;}
+/* Yield comparison */
+.yield-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:14px;}
+.yield-row{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
+.yield-label{width:140px;font-size:11px;color:var(--text-dim);flex-shrink:0;}
+.yield-bar-bg{flex:1;height:28px;background:var(--surface2);border-radius:4px;overflow:hidden;position:relative;}
+.yield-bar-fill{height:100%;border-radius:4px;transition:width .5s ease;display:flex;align-items:center;padding:0 10px;font-family:var(--mono);font-size:12px;font-weight:600;color:var(--bg);min-width:60px;}
+.yield-delta{font-size:12px;font-family:var(--mono);font-weight:600;width:70px;text-align:right;flex-shrink:0;}
+/* Chart cards */
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:14px;}
+.chart-card h4{font-size:12px;font-weight:500;margin-bottom:12px;color:var(--text-dim);}
+.chart-card canvas{width:100%!important;}
+.chart-legend{display:flex;gap:16px;margin-top:8px;font-size:10px;color:var(--text-dim);}
+.legend-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px;vertical-align:middle;}
+/* Effects grid */
+.effects-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;}
+.effect-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px;}
+.effect-name{font-size:10px;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-dim);margin-bottom:4px;}
+.effect-value{font-size:22px;font-weight:600;font-family:var(--mono);}
+.effect-conf{font-size:10px;color:var(--text-dim);margin-top:2px;}
+.effect-bar{height:3px;background:var(--surface2);border-radius:2px;margin-top:6px;overflow:hidden;}
+.effect-bar-fill{height:100%;border-radius:2px;transition:width .5s;}
+/* Heatmap */
+.heatmap-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:14px;}
+.heatmap-card h4{font-size:12px;font-weight:500;margin-bottom:10px;color:var(--text-dim);}
+#heatmapCanvas{width:100%;border-radius:5px;}
+/* Misc */
+.confidence-notes{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;margin-top:12px;font-size:11px;color:var(--text-dim);}
+.confidence-notes li{margin-left:14px;margin-bottom:3px;}
+.loading{text-align:center;padding:30px;color:var(--text-dim);}
+.spinner{display:inline-block;width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:6px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.app-footer{text-align:center;padding:20px;color:var(--text-dim);font-size:11px;border-top:1px solid var(--border);}.app-footer a{color:var(--accent);text-decoration:none;}.app-footer a:hover{text-decoration:underline;}
+.source-tag{font-size:10px;color:var(--text-dim);font-style:italic;margin-top:4px;}
+/* Info tooltips */
+.info-tip{display:inline-block;cursor:help;color:var(--text-dim);font-size:11px;position:relative;}
+.info-tip:hover{color:var(--accent);}
+.info-tip:hover::after{content:attr(title);position:absolute;bottom:120%;left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-size:11px;color:var(--text);width:240px;z-index:20;white-space:normal;line-height:1.4;box-shadow:0 4px 12px rgba(0,0,0,0.4);}
+/* Info modal for KPI explanations */
+.info-modal{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:100;align-items:center;justify-content:center;}
+.info-modal.show{display:flex;}
+.info-modal-inner{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px;max-width:420px;width:90%;max-height:70vh;overflow-y:auto;color:var(--text);font-size:12px;line-height:1.6;}
+.info-modal-inner h3{font-size:14px;margin-bottom:8px;color:var(--accent);}
+.info-modal-inner .close-btn{float:right;background:none;border:none;color:var(--text-dim);font-size:18px;cursor:pointer;}
+.info-modal-inner .close-btn:hover{color:var(--text);}
+.effect-info-btn{background:none;border:1px solid var(--border);color:var(--text-dim);width:22px;height:22px;border-radius:50%;font-size:10px;cursor:pointer;float:right;display:flex;align-items:center;justify-content:center;}
+.effect-info-btn:hover{border-color:var(--accent);color:var(--accent);}
+@media(max-width:900px){.sound-phases{grid-template-columns:1fr;}.effects-grid{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:600px){.effects-grid{grid-template-columns:1fr;}.page{padding:12px 14px 30px;}}
+</style>
+</head>
+<body>
+<div class="app-header"><h1>Simulator: Sound's Affect on Rice Growth, Stress &amp; Yield</h1></div>
+<div class="page">
+  <!-- ROW 1: Duration only -->
+  <div class="panel" style="margin-bottom:14px;"><h3>Sound Treatment Duration</h3>
+    <div class="slider-group"><div class="slider-label"><span>Days sound is played</span><span class="slider-value val-accent" id="daysVal">120</span></div><input type="range" id="totalDays" min="1" max="120" value="120" step="1"></div>
+    <div style="font-size:10px;color:var(--text-dim);">Crop always grows to harvest (~111 days). This controls how many days sound treatment is active.</div>
+  </div>
+  <!-- ROW 2: Sound phases -->
+  <div class="sound-phases" id="soundPhases">
+    <div class="sound-phase phase-germ" id="germPanel"><h3>Germination Sound <span class="phase-tag tag-germ">Days 1–10</span></h3>
+      <div class="slider-group"><div class="slider-label"><span>Frequency</span><span class="slider-value" id="germFreqVal"><span class="val-accent">1000 Hz</span></span></div><input type="range" id="germFreq" min="0" max="1000" value="181" step="1"><div class="freq-track"><div class="freq-track-us" style="width:20%"></div></div><div class="freq-labels"><span>50 Hz</span><span>1 kHz</span><span>10 kHz</span><span class="us-label">60 kHz</span></div></div>
+      <div class="slider-group"><div class="slider-label"><span>SPL at 1m</span><span class="slider-value val-accent" id="germSplVal">85 dB</span></div><input type="range" id="germSpl" min="40" max="120" value="85" step="1"></div>
+      <div class="slider-group"><div class="slider-label"><span>Hours / day</span><span class="slider-value val-accent" id="germHoursVal">3 h</span></div><input type="range" id="germHours" min="0" max="24" value="3" step="0.5"></div>
+      <button class="audio-toggle-btn" id="germAudioToggle" onclick="toggleAudio('germ')" type="button">▶ Preview tone</button>
+      <div class="input-group"><label>Stage target</label><select id="germStage"><option value="seed" selected>Seed</option><option value="germination">Germination</option></select></div>
+    </div>
+    <div class="sound-phase phase-grow disabled-phase" id="growPanel"><h3>Seedling → Harvest Sound <span class="phase-tag tag-grow">Days 11+</span></h3>
+      <div class="slider-group"><div class="slider-label"><span>Frequency</span><span class="slider-value" id="growFreqVal"><span class="val-accent">350 Hz</span></span></div><input type="range" id="growFreq" min="0" max="1000" value="160" step="1"><div class="freq-track"><div class="freq-track-us" style="width:20%"></div></div><div class="freq-labels"><span>50 Hz</span><span>1 kHz</span><span>10 kHz</span><span class="us-label">60 kHz</span></div></div>
+      <div class="slider-group"><div class="slider-label"><span>SPL at 1m</span><span class="slider-value val-accent" id="growSplVal">68 dB</span></div><input type="range" id="growSpl" min="40" max="120" value="68" step="1"></div>
+      <div class="slider-group"><div class="slider-label"><span>Hours / day</span><span class="slider-value val-accent" id="growHoursVal">3 h</span></div><input type="range" id="growHours" min="0" max="12" value="3" step="0.5"></div>
+      <button class="audio-toggle-btn" id="growAudioToggle" onclick="toggleAudio('grow')" type="button">▶ Preview tone</button>
+      <div class="input-group"><label>Stage target</label><select id="growStage"><option value="seedling">Seedling</option><option value="vegetative" selected>Vegetative</option><option value="reproductive">Reproductive</option><option value="mixed">Mixed / all</option></select></div>
+    </div>
+  </div>
+  <!-- Plot preview full width -->
+  <div class="paddy-vis-card"><h3>Plot Preview</h3><div class="paddy-vis-inner"><canvas id="paddyCanvas"></canvas></div><div class="paddy-dims" id="paddyDims">100 × 50 m — 4 speakers</div></div>
+  <!-- Plot properties below preview -->
+  <div class="panel" style="margin-bottom:14px;"><h3>Plot Properties</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+      <div class="input-group"><label>Length (m)</label><input type="number" id="fieldLength" value="100" min="10" max="1000"></div>
+      <div class="input-group"><label>Width (m)</label><input type="number" id="fieldWidth" value="50" min="10" max="1000"></div>
+      <div class="input-group"><label>Place a speaker every… (m)</label><input type="number" id="spacing" value="25" min="1" max="200" step="0.5"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:6px;">
+      <div class="input-group"><label>Speaker height (m)</label><input type="number" id="speakerHeight" value="2.0" min="0.1" max="10" step="0.1"></div>
+      <div class="input-group"><label>Water regime</label>
+        <select id="waterRegime"><option value="irrigated">Irrigated (no stress)</option><option value="rainfed">Rainfed (mild stress)</option><option value="drought">Drought</option></select>
+      </div>
+    </div>
+    <div class="slider-group" id="droughtGroup" style="display:none;margin-top:6px;"><div class="slider-label"><span>Drought severity</span><span class="slider-value val-accent" id="droughtVal">0.5</span></div><input type="range" id="droughtSeverity" min="0" max="1" value="0.5" step="0.05"></div>
+    <div style="font-size:10px;color:var(--text-dim);margin-top:4px;" id="speakerInfo">4 speakers (equidistant grid)</div>
+  </div>
+  <div style="margin-bottom:20px;"><button class="run-btn" id="runBtn" onclick="runSimulation()">Run Simulation</button></div>
+  <div id="resultsContent"></div>
+</div>
+<div class="app-footer">Data baseline: USDA-ARS Dale Bumpers NRRC, Stuttgart AR (Farag et al. 2024) · For feedback or queries: <a href="https://github.com/isaacigb" target="_blank" rel="noopener">IsaacIgb</a></div>
+
+<script>
+// === Frequency slider ===
+function sliderToHz(v){v=+v;if(v<=500)return Math.round(50+(v/500)*950);if(v<=800)return Math.round(1000+((v-500)/300)*9000);return Math.round(10000+((v-800)/200)*50000);}
+function formatHz(hz){if(hz>=10000)return(hz/1000).toFixed(0)+' kHz';if(hz>=1000)return(hz/1000).toFixed(1)+' kHz';return hz+' Hz';}
+function isUltrasound(hz){return hz>=20000;}
+function updateFreqDisplay(sid,vid){const hz=sliderToHz(+document.getElementById(sid).value);const el=document.getElementById(vid);const us=isUltrasound(hz);el.innerHTML=`<span class="${us?'val-us':'val-accent'}">${formatHz(hz)}${us?' ⚡':''}</span>`;const s=document.getElementById(sid);us?s.classList.add('us-active'):s.classList.remove('us-active');return hz;}
+// === Days ===
+function updateDaysUI(){const d=+document.getElementById('totalDays').value;document.getElementById('daysVal').textContent=d;const g=document.getElementById('growPanel');d>10?g.classList.remove('disabled-phase'):g.classList.add('disabled-phase');}
+document.getElementById('totalDays').oninput=updateDaysUI;updateDaysUI();
+// === Sliders ===
+document.getElementById('germFreq').oninput=()=>{updateFreqDisplay('germFreq','germFreqVal');updateAudioFreq('germ');};
+document.getElementById('growFreq').oninput=()=>{updateFreqDisplay('growFreq','growFreqVal');updateAudioFreq('grow');};
+document.getElementById('germSpl').oninput=e=>{document.getElementById('germSplVal').textContent=e.target.value+' dB';updateAudioGain('germ');};
+document.getElementById('growSpl').oninput=e=>{document.getElementById('growSplVal').textContent=e.target.value+' dB';updateAudioGain('grow');};
+document.getElementById('germHours').oninput=e=>{document.getElementById('germHoursVal').textContent=e.target.value+' h';};
+document.getElementById('growHours').oninput=e=>{document.getElementById('growHoursVal').textContent=e.target.value+' h';};
+document.getElementById('droughtSeverity').oninput=e=>{document.getElementById('droughtVal').textContent=e.target.value;};
+document.getElementById('waterRegime').onchange=e=>{document.getElementById('droughtGroup').style.display=e.target.value==='drought'?'block':'none';};
+updateFreqDisplay('germFreq','germFreqVal');updateFreqDisplay('growFreq','growFreqVal');
+// === Audio ===
+let audioCtx=null;const audioState={germ:{osc:null,gain:null,playing:false},grow:{osc:null,gain:null,playing:false}};
+function initAudio(){if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();}
+function splToGain(db){return Math.pow(Math.max(0,Math.min(1,(db-40)/80)),2.5)*0.3;}
+function toggleAudio(p){initAudio();if(audioCtx.state==='suspended')audioCtx.resume();const s=audioState[p];const btn=document.getElementById(p+'AudioToggle');if(s.playing){if(s.gain)s.gain.gain.setTargetAtTime(0,audioCtx.currentTime,0.05);setTimeout(()=>{try{s.osc.stop();}catch(e){}s.osc=null;},100);s.playing=false;btn.textContent='▶ Preview tone';btn.classList.remove('audio-active');}else{s.gain=audioCtx.createGain();s.gain.connect(audioCtx.destination);s.osc=audioCtx.createOscillator();s.osc.type='sine';const hz=sliderToHz(+document.getElementById(p==='germ'?'germFreq':'growFreq').value);s.osc.frequency.value=Math.min(hz,20000);s.osc.connect(s.gain);s.gain.gain.setTargetAtTime(splToGain(+document.getElementById(p==='germ'?'germSpl':'growSpl').value),audioCtx.currentTime,0.05);s.osc.start();s.playing=true;btn.textContent='◼ Stop';btn.classList.add('audio-active');}}
+function updateAudioFreq(p){const s=audioState[p];if(!s.playing||!s.osc)return;s.osc.frequency.setTargetAtTime(Math.min(sliderToHz(+document.getElementById(p==='germ'?'germFreq':'growFreq').value),20000),audioCtx.currentTime,0.03);}
+function updateAudioGain(p){const s=audioState[p];if(!s.playing||!s.gain)return;s.gain.gain.setTargetAtTime(splToGain(+document.getElementById(p==='germ'?'germSpl':'growSpl').value),audioCtx.currentTime,0.05);}
+// === Paddy visualiser ===
+const paddyCanvas=document.getElementById('paddyCanvas'),pCtx=paddyCanvas.getContext('2d');
+function gpi(){
+  const length=Math.max(1,+document.getElementById('fieldLength').value||100);
+  const width=Math.max(1,+document.getElementById('fieldWidth').value||50);
+  const spacing=Math.max(1,+document.getElementById('spacing').value||25);
+  const nX=Math.max(1,Math.floor(length/spacing));
+  const nY=Math.max(1,Math.floor(width/spacing));
+  const speakers=nX*nY;
+  // Update speaker info display
+  const info=document.getElementById('speakerInfo');
+  if(info)info.textContent=`${speakers} speaker${speakers!==1?'s':''} (${nX}×${nY} grid, every ${spacing}m)`;
+  return{length,width,speakers,spacing};
+}
+function csp(fL,fW,c,sp){if(c<=0)return[];if(c===1)return[{x:fL/2,y:fW/2}];const a=fL/Math.max(fW,.1);let nX=Math.max(1,Math.round(Math.sqrt(c*a))),nY=Math.max(1,Math.round(c/nX));while(nX*nY>c){nX>nY?nX--:nY--;}const m=Math.min(sp/2,fL*.1,fW*.1),uL=fL-2*m,uW=fW-2*m,dx=nX>1?uL/(nX-1):0,dy=nY>1?uW/(nY-1):0;const p=[];for(let i=0;i<nX;i++)for(let j=0;j<nY;j++)p.push({x:m+i*dx||fL/2,y:m+j*dy||fW/2});let r=c-p.length;for(let k=0;k<r;k++)p.push({x:m+(k+1)*uL/(r+1),y:fW/2});return p;}
+function drawPaddy(time){const{length,width,speakers,spacing}=gpi();document.getElementById('paddyDims').textContent=`${length} × ${width} m — ${speakers} speaker${speakers!==1?'s':''}`;const wrap=paddyCanvas.parentElement,W=wrap.clientWidth,H=wrap.clientHeight;if(W<1||H<1){requestAnimationFrame(drawPaddy);return;}const dpr=window.devicePixelRatio||2;paddyCanvas.width=W*dpr;paddyCanvas.height=H*dpr;paddyCanvas.style.width=W+'px';paddyCanvas.style.height=H+'px';const ctx=pCtx;ctx.setTransform(dpr,0,0,dpr,0,0);const pad=4,dW=W-pad*2,dH=H-pad*2,cs=Math.min(dW/length,dH/width,5),fW2=length*cs,fH=width*cs,oX=pad+(dW-fW2)/2,oY=pad+(dH-fH)/2;ctx.clearRect(0,0,W,H);ctx.fillStyle='rgba(74,222,128,0.12)';ctx.fillRect(oX,oY,fW2,fH);if(cs>=1.5){ctx.strokeStyle='rgba(74,222,128,0.07)';ctx.lineWidth=0.5;for(let c=0;c<=Math.round(length);c++){const x=oX+c*cs;ctx.beginPath();ctx.moveTo(x,oY);ctx.lineTo(x,oY+fH);ctx.stroke();}for(let r=0;r<=Math.round(width);r++){const y=oY+r*cs;ctx.beginPath();ctx.moveTo(oX,y);ctx.lineTo(oX+fW2,y);ctx.stroke();}}ctx.strokeStyle='rgba(74,222,128,0.25)';ctx.lineWidth=1;ctx.strokeRect(oX,oY,fW2,fH);const spk=csp(length,width,speakers,spacing),pulse=.5+.5*Math.sin(time*.003);spk.forEach(s=>{const sx=oX+(s.x/length)*fW2,sy=oY+(s.y/width)*fH;for(let ring=3;ring>=1;ring--){ctx.beginPath();ctx.arc(sx,sy,3+ring*4+pulse*ring*2.5,0,Math.PI*2);ctx.fillStyle=`rgba(239,68,68,${(.13+pulse*.13)/ring})`;ctx.fill();}ctx.beginPath();ctx.arc(sx,sy,3,0,Math.PI*2);ctx.fillStyle='#ef4444';ctx.fill();});requestAnimationFrame(drawPaddy);}
+drawPaddy(0);
+
+// === Store last result for toggle redraws ===
+let lastResult = null;
+let currentToggle = 'all';
+
+// === Run simulation ===
+async function runSimulation(){
+  const btn=document.getElementById('runBtn'),ct=document.getElementById('resultsContent');
+  btn.disabled=true;btn.textContent='Running...';ct.style.display='block';
+  ct.innerHTML='<div class="loading"><div class="spinner"></div><div>Simulating with RREC 2022 weather data…</div></div>';
+  const days=+document.getElementById('totalDays').value;
+  const germHz=sliderToHz(+document.getElementById('germFreq').value);
+  const growHz=sliderToHz(+document.getElementById('growFreq').value);
+  const fL=+document.getElementById('fieldLength').value||100, fW=+document.getElementById('fieldWidth').value||50;
+  const sp=+document.getElementById('spacing').value||25;
+  const spkCount=Math.max(1,Math.floor(fL/sp))*Math.max(1,Math.floor(fW/sp));
+  const body={
+    frequency_hz:days>10?growHz:germHz, spl_db_at_1m:days>10?+document.getElementById('growSpl').value:+document.getElementById('germSpl').value,
+    hours_per_day:days>10?+document.getElementById('growHours').value:+document.getElementById('germHours').value,
+    total_days:days, stage_bucket:days>10?document.getElementById('growStage').value:document.getElementById('germStage').value,
+    germ_frequency_hz:germHz, germ_spl_db:+document.getElementById('germSpl').value, germ_hours_per_day:+document.getElementById('germHours').value,
+    field_length_m:fL, field_width_m:fW,
+    speaker_count:spkCount, spacing_m:sp,
+    speaker_height_m:+document.getElementById('speakerHeight').value,
+    water_regime:document.getElementById('waterRegime').value, drought_severity:+document.getElementById('droughtSeverity').value, grid_resolution:40,
+  };
+  try{const resp=await fetch('/simulate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});if(!resp.ok)throw new Error('Failed: '+resp.status);lastResult=await resp.json();currentToggle='all';renderResults();}catch(err){ct.innerHTML=`<div style="padding:20px;color:var(--danger);">Error: ${err.message}</div>`;}
+  btn.disabled=false;btn.textContent='Run Simulation';
+}
+
+// === Render results ===
+function renderResults(){
+  const data=lastResult;if(!data)return;
+  const c=document.getElementById('resultsContent');
+  const rrec=data.rrec_baseline||{};
+  const cats=rrec.categories||{};
+  // Get RREC yield for current toggle
+  let rrec_yield=rrec.overall?.yield_tha?.median||0;
+  let rrec_label='All plots (median)';
+  if(currentToggle==='hybrid'&&cats.hybrid){rrec_yield=cats.hybrid.yield_tha.median;rrec_label=cats.hybrid.label;}
+  else if(currentToggle==='inbred'&&cats.inbred){rrec_yield=cats.inbred.yield_tha.median;rrec_label=cats.inbred.label;}
+  else if(currentToggle==='traditional'&&cats.traditional){rrec_yield=cats.traditional.yield_tha.median;rrec_label=cats.traditional.label;}
+
+  const bY=data.baseline_yield_tha, tY=data.treated_yield_tha;
+
+  let h='';
+
+  // Toggle bar for RREC cultivar categories
+  h+=`<div class="toggle-bar">
+    <button class="toggle-btn ${currentToggle==='all'?'active':''}" onclick="currentToggle='all';renderResults();">All plots (median)</button>
+    <button class="toggle-btn ${currentToggle==='hybrid'?'active':''}" onclick="currentToggle='hybrid';renderResults();">Hybrid</button>
+    <button class="toggle-btn ${currentToggle==='inbred'?'active':''}" onclick="currentToggle='inbred';renderResults();">Inbred</button>
+    <button class="toggle-btn ${currentToggle==='traditional'?'active':''}" onclick="currentToggle='traditional';renderResults();">Traditional</button>
+  </div>`;
+
+  // === Graph carousel ===
+  h+=`<div style="position:relative;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <button class="nav-btn" onclick="showGraph(-1)">◀</button>
+      <span id="graphTitle" style="font-size:13px;font-weight:500;color:#e2e6ee;"></span>
+      <button class="nav-btn" onclick="showGraph(1)">▶</button>
+    </div>
+    <div id="graphContainer">
+      <!-- Graph 1: Yield Comparison -->
+      <div class="graph-slide" id="slide0">
+        <div class="yield-card">`;
+
+  // Yield bars: 3 bars telling the full story
+  // Sound effect % comes from ORYZA model, applied to RREC real yield
+  const soundPct = data.yield_change_pct;
+  const treatedRREC = rrec_yield * (1 + soundPct / 100);  // Apply model delta to real farm number
+  const maxYB=Math.max(rrec_yield, treatedRREC, bY, 1)*1.15;
+
+  const yieldBars=[
+    {label:`RREC farm — ${rrec_label}`, val:rrec_yield, color:'#f59e0b', delta:'Real world baseline'},
+    {label:'ORYZA IR72 simulation', val:bY, color:'#60a5fa', delta:'Theoretical (no sound)'},
+    {label:`With sound (${data.sound_treatment_days} days)`, val:treatedRREC, color:'#4ade80', delta:`${soundPct>=0?'+':''}${soundPct}% applied to farm yield`},
+  ];
+  yieldBars.forEach(b=>{
+    const pct=Math.max(3,(b.val/maxYB)*100);
+    h+=`<div class="yield-row"><div class="yield-label">${b.label}</div><div class="yield-bar-bg"><div class="yield-bar-fill" style="width:${pct}%;background:${b.color}">${b.val.toFixed(1)} t/ha</div></div><div class="yield-delta" style="color:#7c8494;font-size:10px;">${b.delta}</div></div>`;
+  });
+  h+=`<div class="source-tag">Farm data: RREC Stuttgart AR, 2022 (${rrec.overall?.yield_tha?.n||0} plots) · Farag et al. 2024 · Sound effect: ${soundPct>=0?'+':''}${soundPct}% from ORYZA+Lorentzian model</div>`;
+  h+=`</div></div>`;
+
+  // Graph 2: Growth Timeline
+  h+=`<div class="graph-slide" id="slide1" style="display:none;">
+    <div class="chart-card"><canvas id="growthChart" height="260"></canvas>
+    <div class="chart-legend">
+      <span><span class="legend-dot" style="background:#60a5fa"></span>Baseline (no sound)</span>
+      <span><span class="legend-dot" style="background:#4ade80"></span>Sound-treated</span>
+      ${data.sound_treatment_days < data.baseline_final_day ? '<span style=\"color:#4ade80;\">⋮ Sound off point</span>' : ''}
+    </div></div></div>`;
+
+  // Graph 3: Sound Effect Breakdown
+  const kpiInfo = {
+    germination: 'Estimated change in germination rate/speed. Based on Bochu 2003 (400 Hz/106 dB seed treatment) and ultrasound studies. Equation: Lorentzian R(f) = A/(1+((f-f₀)/γ)²) fitted to seed-stage data.',
+    vigor: 'Estimated change in early plant growth (height, leaf area, dry weight). Based on Jusoh 2023 (357 Hz +21% height) and PAFT field trials. Equation: Lorentzian resonance fitted to vigor-related outcomes.',
+    photosynthesis: 'Estimated change in carbon assimilation rate. Based on Jusoh 2023 (350-380 Hz +39-43% assimilation) and Qi 2010 (550 Hz +10% chlorophyll). Equation: Lorentzian with f₀≈345 Hz, γ≈110 Hz fitted to 3 rice data points.',
+    water_status: 'Aggregate water status combining three independent tracks per CWSI theory (Idso 1981): stomatal conductance under drought (gsw, Jeong 2014, 60% weight), relative water content (RWC, 25%), and intrinsic water use efficiency (iWUE, Jusoh 2023, 15%). Each track has its own Lorentzian curve fitted to outcome-specific data.',
+    stress_resilience: 'Estimated change in stress tolerance (ROS scavenging, flavonoids, defense genes). Based on Jeong 2008 (50-250 Hz gene expression) and cross-species defense metabolite data. Primarily gene-level evidence, phenotypic magnitude uncertain.',
+    yield: 'Estimated change in grain yield at harvest. Based on Hou 2009 (+5.7% PAFT field trial) and the compound effect of photosynthesis/vigor changes through the growth cycle. This % is applied to RREC real farm yield in Graph 1.',
+  };
+  h+=`<div class="graph-slide" id="slide2" style="display:none;"><div class="effects-grid">`;
+  const mainKPIs=['germination','vigor','photosynthesis','water_status','stress_resilience','yield'];
+  for(const k of mainKPIs){
+    const e=data.sound_effects[k];if(!e)continue;
+    const col=e.effect_pct>=0.5?'#4ade80':e.effect_pct<=-0.5?'#ef4444':'#7c8494';
+    const barW=Math.min(100,Math.abs(e.effect_pct)*2);
+    const info=kpiInfo[k]||'';
+    h+=`<div class="effect-card">
+      <button class="effect-info-btn" onclick="showInfoModal('${k.replace('_',' ')}','${info.replace(/'/g,"\\'")}')">ⓘ</button>
+      <div class="effect-name">${k.replace('_',' ')}</div>
+      <div class="effect-value" style="color:${col}">${e.effect_pct>0?'+':''}${e.effect_pct.toFixed(1)}%</div>
+      <div class="effect-bar"><div class="effect-bar-fill" style="width:${barW}%;background:${col}"></div></div>
+    </div>`;
+  }
+  h+=`</div></div>`;
+
+  h+=`</div></div>`; // close graphContainer and relative wrapper
+
+  // SPL heatmap (always visible below carousel)
+  h+=`<div class="heatmap-card"><h4>Canopy SPL Distribution — ${data.acoustics_summary.mean_spl} dB mean</h4><canvas id="heatmapCanvas" width="600" height="300"></canvas></div>`;
+
+  // Export Data + Reset Simulation buttons
+  h+=`<div style="display:flex;gap:10px;margin-bottom:14px;">
+    <button onclick="exportCSV()" style="flex:1;padding:10px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--accent);cursor:pointer;font-size:12px;font-weight:500;">Export Data</button>
+    <button onclick="resetSimulation()" style="flex:1;padding:10px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text-dim);cursor:pointer;font-size:12px;font-weight:500;">Reset Simulation</button>
+  </div>`;
+
+  if(data.confidence_notes?.length){h+='<div class="confidence-notes"><strong>Notes:</strong><ul>';data.confidence_notes.forEach(n=>h+=`<li>${n}</li>`);h+='</ul></div>';}
+
+  c.innerHTML=h;
+  currentSlide=0;
+  updateGraphView();
+  setTimeout(()=>{drawGrowthChart(data);drawHeatmap(data.heatmap_data);},50);
+}
+
+// === Graph carousel navigation ===
+let currentSlide=0;
+const graphTitles=['Yield Comparison','Growth Timeline — Biomass (kg/ha)','Sound Effect Breakdown'];
+
+function showGraph(dir){
+  currentSlide=((currentSlide+dir)%3+3)%3;
+  updateGraphView();
+  if(currentSlide===1&&lastResult)setTimeout(()=>drawGrowthChart(lastResult),30);
+}
+
+function updateGraphView(){
+  for(let i=0;i<3;i++){
+    const el=document.getElementById('slide'+i);
+    if(el)el.style.display=i===currentSlide?'block':'none';
+  }
+  const t=document.getElementById('graphTitle');
+  if(t)t.textContent=`${currentSlide+1}/3 — ${graphTitles[currentSlide]}`;
+}
+
+// === Growth timeline chart ===
+function drawGrowthChart(data){
+  const cv=document.getElementById('growthChart');if(!cv)return;
+  const ctx=cv.getContext('2d');const W=cv.parentElement.clientWidth-32;
+  const H=240;cv.width=W*2;cv.height=H*2;cv.style.width=W+'px';cv.style.height=H+'px';ctx.scale(2,2);
+  const bts=data.baseline_timeseries,tts=data.treated_timeseries;
+  const days=bts.days,bm=bts.biomass,tm=tts.biomass;
+  const rawMax=Math.max(...bm,...tm,100);
+  // Round max to a clean number
+  const mag=Math.pow(10,Math.floor(Math.log10(rawMax)));
+  const maxY=Math.ceil(rawMax/mag)*mag;
+  const p={l:56,r:12,t:14,b:32},w=W-p.l-p.r,h=H-p.t-p.b;
+  const maxDay=Math.max(1,days[days.length-1]);
+  const tx=i=>p.l+(days[i]/maxDay)*w;
+  const ty=v=>p.t+h-(v/maxY)*h;
+  // Grid + Y axis labels
+  ctx.strokeStyle='#252b38';ctx.lineWidth=0.5;
+  const nGrid=5;
+  for(let i=0;i<=nGrid;i++){
+    const y=p.t+(i/nGrid)*h;
+    const val=maxY*(1-i/nGrid);
+    ctx.beginPath();ctx.moveTo(p.l,y);ctx.lineTo(p.l+w,y);ctx.stroke();
+    ctx.fillStyle='#7c8494';ctx.font='10px JetBrains Mono';ctx.textAlign='right';
+    ctx.fillText(val>=1000?(val/1000).toFixed(0)+'k':Math.round(val),p.l-6,y+4);
+  }
+  // X axis labels
+  ctx.fillStyle='#7c8494';ctx.font='10px JetBrains Mono';ctx.textAlign='center';
+  const xStep=maxDay<=30?5:maxDay<=60?10:maxDay<=90?15:20;
+  for(let d=0;d<=maxDay;d+=xStep){
+    const x=p.l+(d/maxDay)*w;
+    ctx.fillText(d,x,H-8);
+  }
+  ctx.fillStyle='#7c8494';ctx.font='10px DM Sans';ctx.fillText('Days from emergence',p.l+w/2,H-0);
+  // Shaded area between curves
+  ctx.beginPath();
+  for(let i=0;i<days.length;i++){i===0?ctx.moveTo(tx(i),ty(tm[i])):ctx.lineTo(tx(i),ty(tm[i]));}
+  for(let i=days.length-1;i>=0;i--){ctx.lineTo(tx(i),ty(bm[i]));}
+  ctx.closePath();ctx.fillStyle='rgba(74,222,128,0.10)';ctx.fill();
+  // Treatment zone indicator
+  const treatDays=data.sound_treatment_days||maxDay;
+  if(treatDays<maxDay){
+    const treatX=p.l+(Math.min(treatDays,maxDay)/maxDay)*w;
+    ctx.fillStyle='rgba(74,222,128,0.04)';ctx.fillRect(p.l,p.t,treatX-p.l,h);
+    ctx.strokeStyle='#4ade80';ctx.lineWidth=1;ctx.setLineDash([4,4]);
+    ctx.beginPath();ctx.moveTo(treatX,p.t);ctx.lineTo(treatX,p.t+h);ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle='#4ade80';ctx.font='9px DM Sans';ctx.textAlign='center';
+    ctx.fillText('Sound off →',treatX+30,p.t+12);
+  }
+  // Baseline line — blue, thinner
+  ctx.strokeStyle='#60a5fa';ctx.lineWidth=2;ctx.setLineDash([]);
+  ctx.beginPath();for(let i=0;i<days.length;i++){i===0?ctx.moveTo(tx(i),ty(bm[i])):ctx.lineTo(tx(i),ty(bm[i]));}ctx.stroke();
+  // Treated line — green, thicker
+  ctx.strokeStyle='#4ade80';ctx.lineWidth=2.5;
+  ctx.beginPath();for(let i=0;i<days.length;i++){i===0?ctx.moveTo(tx(i),ty(tm[i])):ctx.lineTo(tx(i),ty(tm[i]));}ctx.stroke();
+  // End markers
+  if(days.length>1){
+    const lastI=days.length-1;
+    const endX=tx(lastI);
+    // Check if label would overflow right edge (assume ~50px label width)
+    const labelRight=endX+58>W;
+    const lblAlign=labelRight?'right':'left';
+    const lblOffX=labelRight?-8:8;
+    // Baseline end dot
+    ctx.beginPath();ctx.arc(endX,ty(bm[lastI]),4,0,Math.PI*2);ctx.fillStyle='#60a5fa';ctx.fill();
+    ctx.fillStyle='#60a5fa';ctx.font='11px JetBrains Mono';ctx.textAlign=lblAlign;
+    ctx.fillText((bm[lastI]/1000).toFixed(1)+'t',endX+lblOffX,ty(bm[lastI])+4);
+    // Treated end dot
+    ctx.beginPath();ctx.arc(endX,ty(tm[lastI]),4,0,Math.PI*2);ctx.fillStyle='#4ade80';ctx.fill();
+    ctx.fillStyle='#4ade80';
+    ctx.fillText((tm[lastI]/1000).toFixed(1)+'t',endX+lblOffX,ty(tm[lastI])-6);
+  }
+}
+
+// === Heatmap ===
+function drawHeatmap(hm){
+  const cv=document.getElementById('heatmapCanvas');if(!cv)return;
+  const ctx=cv.getContext('2d');const g=hm.spl_values,nx=g.length,ny=g[0]?g[0].length:0;if(!nx||!ny)return;
+  const gx=hm.grid_x,gy=hm.grid_y,fieldW=gx[gx.length-1],fieldH=gy[gy.length-1];
+  const W=cv.parentElement.clientWidth-28,H=Math.max(120,Math.min(300,W*(fieldH/fieldW)));
+  cv.width=W*2;cv.height=H*2;cv.style.width=W+'px';cv.style.height=H+'px';ctx.scale(2,2);
+  const cw=W/nx,ch=H/ny;
+  // Use 0 to user's max SPL as the colour range
+  let dataMx=-Infinity;for(let i=0;i<nx;i++)for(let j=0;j<ny;j++){if(g[i][j]>dataMx)dataMx=g[i][j];}
+  const inputSPL=lastResult?.acoustics_summary?.max_spl||dataMx;
+  const mn=0,mx=Math.max(dataMx,inputSPL);
+  const sc=v=>{const t=Math.max(0,Math.min(1,(v-mn)/(mx-mn+.01)));return`rgb(${Math.round(t<.5?t*400:200+(t-.5)*110)},${Math.round(t<.5?100+t*310:255-(t-.5)*400)},${Math.round(40+(1-t)*40)})`};
+  for(let i=0;i<nx;i++)for(let j=0;j<ny;j++){ctx.fillStyle=sc(g[i][j]);ctx.fillRect(i*cw,j*ch,cw+.5,ch+.5);}
+  const sp=hm.speakers||[];
+  sp.forEach(s=>{const sx=(s.x/fieldW)*W,sy=(s.y/fieldH)*H;for(let ring=3;ring>=1;ring--){ctx.beginPath();ctx.arc(sx,sy,3+ring*4,0,Math.PI*2);ctx.fillStyle=`rgba(239,68,68,${0.18/ring})`;ctx.fill();}ctx.beginPath();ctx.arc(sx,sy,3.5,0,Math.PI*2);ctx.fillStyle='#ef4444';ctx.fill();});
+  const bW=10,bH=H-16,bX=W-bW-36;for(let i=0;i<bH;i++){ctx.fillStyle=sc(mn+(1-i/bH)*(mx-mn));ctx.fillRect(bX,8+i,bW,1.5);}
+  ctx.fillStyle='#e2e6ee';ctx.font='8px JetBrains Mono';ctx.textAlign='left';ctx.fillText(mx.toFixed(0)+'dB',bX+bW+2,14);ctx.fillText(mn.toFixed(0)+'dB',bX+bW+2,bH+8);
+}
+
+// === Info modal for KPI explanations ===
+function showInfoModal(title, content) {
+  let modal = document.getElementById('infoModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'infoModal';
+    modal.className = 'info-modal';
+    modal.innerHTML = '<div class="info-modal-inner"><button class="close-btn" onclick="this.parentElement.parentElement.classList.remove(\'show\')">✕</button><h3 id="infoModalTitle"></h3><p id="infoModalContent"></p></div>';
+    modal.addEventListener('click', e => { if (e.target === modal) modal.classList.remove('show'); });
+    document.body.appendChild(modal);
+  }
+  document.getElementById('infoModalTitle').textContent = title;
+  document.getElementById('infoModalContent').textContent = content;
+  modal.classList.add('show');
+}
+// === Export simulation data as CSV ===
+function exportCSV(){
+  if(!lastResult)return;
+  const d=lastResult;
+  let csv='RICE SOUND SIMULATOR — EXPORT\n\n';
+  csv+='INPUT PARAMETERS\n';
+  csv+='Parameter,Value\n';
+  csv+=`Frequency (Hz),${d.inputs?.frequency_hz||''}\n`;
+  csv+=`SPL at 1m (dB),${d.inputs?.spl_db_at_1m||''}\n`;
+  csv+=`Hours per day,${d.inputs?.hours_per_day||''}\n`;
+  csv+=`Treatment days,${d.sound_treatment_days||''}\n`;
+  csv+=`Water regime,${d.inputs?.water_regime||''}\n`;
+  csv+=`Field (m),${d.inputs?.field_length_m||''}x${d.inputs?.field_width_m||''}\n`;
+  csv+=`Speakers,${d.inputs?.speaker_count||''}\n\n`;
+  csv+='KPI EFFECTS\n';
+  csv+='KPI,Effect (%),Confidence,Direction,Supporting Rows\n';
+  const mainKPIs=['germination','vigor','photosynthesis','water_status','stress_resilience','yield'];
+  for(const k of mainKPIs){
+    const e=d.sound_effects[k];if(!e)continue;
+    csv+=`${k},${e.effect_pct.toFixed(2)},${e.confidence.toFixed(3)},${e.effect_direction},${e.supporting_row_count}\n`;
+  }
+  csv+='\nSUB-KPI DETAIL\n';
+  csv+='Sub-KPI,Effect (%),Confidence\n';
+  for(const[k,e]of Object.entries(d.sound_effects)){
+    if(!mainKPIs.includes(k))csv+=`${k},${e.effect_pct.toFixed(2)},${e.confidence.toFixed(3)}\n`;
+  }
+  csv+='\nYIELD COMPARISON\n';
+  csv+='Metric,Value (t/ha)\n';
+  csv+=`RREC baseline,${d.baseline_yield_tha?.toFixed(2)||''}\n`;
+  csv+=`ORYZA simulated,${d.oryza_yield_tha?.toFixed(2)||''}\n`;
+  csv+=`Sound-treated projection,${d.treated_yield_tha?.toFixed(2)||''}\n`;
+  csv+=`Yield change (%),${d.yield_change_pct?.toFixed(2)||''}\n\n`;
+  csv+='GROWTH TIMESERIES\n';
+  csv+='Day,Baseline Biomass (kg/ha),Treated Biomass (kg/ha)\n';
+  if(d.baseline_timeseries){
+    const days=d.baseline_timeseries.days,bm=d.baseline_timeseries.biomass,tm=d.treated_timeseries.biomass;
+    for(let i=0;i<days.length;i++)csv+=`${days[i]},${bm[i].toFixed(1)},${tm[i].toFixed(1)}\n`;
+  }
+  csv+='\nACOUSTICS SUMMARY\n';
+  csv+=`Mean SPL (dB),${d.acoustics_summary?.mean_spl||''}\n`;
+  csv+=`Max SPL (dB),${d.acoustics_summary?.max_spl||''}\n`;
+  csv+=`Min SPL (dB),${d.acoustics_summary?.min_spl||''}\n`;
+  csv+=`Coverage >60 dB (%),${(d.acoustics_summary?.coverage_above_60db*100)?.toFixed(1)||''}\n`;
+  csv+=`Coverage >70 dB (%),${(d.acoustics_summary?.coverage_above_70db*100)?.toFixed(1)||''}\n`;
+
+  const blob=new Blob([csv],{type:'text/csv'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='rice_sound_simulation.csv';a.click();
+}
+
+// === Reset simulation ===
+function resetSimulation(){
+  lastResult=null;
+  document.getElementById('resultsContainer').innerHTML='';
+  // Reset sliders to defaults
+  document.querySelectorAll('input[type=range]').forEach(el=>{el.value=el.defaultValue;el.dispatchEvent(new Event('input'));});
+  document.querySelectorAll('input[type=number]').forEach(el=>{el.value=el.defaultValue;});
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+</script>
+</body>
+</html>

@@ -1,0 +1,106 @@
+# IR72 cultivar parameters for the Rice Sound Simulator.
+# Following PCSE CropDataProvider pattern.
+# Source: Bouman et al. (2001), ORYZA2000, calibrated for IR72 at IRRI.
+#
+# To add a new cultivar: copy this file, change values, load with
+# load_cultivar_params("new_cultivar.yaml").
+
+cultivar_name: IR72
+source: "Bouman et al. (2001), ORYZA2000: modeling lowland rice"
+
+phenology:
+  # Section 3.2.1, cardinal temperatures (°C)
+  tbase: 8.0
+  topt: 30.0
+  thigh: 42.0
+  # Development rate constants (per °Cd)
+  dvrj: 0.000773   # Juvenile phase (DVS 0 → 0.4)
+  dvri: 0.000749   # Photoperiod-sensitive (DVS 0.4 → 0.65)
+  dvrp: 0.000785   # Panicle formation (DVS 0.65 → 1.0)
+  dvrr: 0.001044   # Grain filling (DVS 1.0 → 2.0)
+
+leaf_area:
+  # Section 3.2.9, SUBLAI2 subroutine
+  rgrlmx: 0.0085   # Max relative leaf area growth rate ((°Cd)^-1)
+  rgrlmn: 0.0045   # Min RGRL (not used in v1, no N module)
+  lai_exp_threshold: 1.0  # LAI at which exponential phase ends
+  # Specific leaf area table (ha leaf / kg DM) vs DVS
+  sla_table:
+    - [0.0,  0.0045]
+    - [0.4,  0.0033]
+    - [0.65, 0.0028]
+    - [1.0,  0.0024]
+    - [1.6,  0.0020]
+    - [2.0,  0.0018]
+
+partitioning:
+  # Section 3.2.3, Eq 3.21
+  # Fraction to shoot vs DVS
+  fsh_table:
+    - [0.0,  0.50]
+    - [0.4,  0.55]
+    - [0.65, 0.70]
+    - [1.0,  0.95]
+    - [1.5,  1.00]
+    - [2.0,  1.00]
+  # Within shoot: fraction to leaves
+  flv_table:
+    - [0.0,  0.55]
+    - [0.33, 0.45]
+    - [0.65, 0.30]
+    - [0.80, 0.15]
+    - [1.0,  0.00]
+    - [2.0,  0.00]
+  # Within shoot: fraction to stems
+  fst_table:
+    - [0.0,  0.45]
+    - [0.33, 0.55]
+    - [0.65, 0.45]
+    - [0.80, 0.35]
+    - [1.0,  0.35]
+    - [1.2,  0.30]
+    - [1.6,  0.25]
+    - [2.0,  0.20]
+  # Within shoot: fraction to storage organs
+  fso_table:
+    - [0.0,  0.00]
+    - [0.65, 0.00]
+    - [0.80, 0.30]
+    - [1.0,  0.50]
+    - [1.2,  0.55]
+    - [1.6,  0.65]
+    - [2.0,  0.70]
+
+leaf_death:
+  # Section 3.2.4, relative death rate vs DVS
+  drlv_table:
+    - [0.0, 0.000]
+    - [0.6, 0.000]
+    - [1.0, 0.015]
+    - [1.6, 0.025]
+    - [2.0, 0.050]
+
+respiration:
+  # Section 3.2.5, Eqs 3.25-3.28
+  # Maintenance coefficients (kg CH2O / kg DM / d at 25°C)
+  mainlv: 0.02
+  mainst: 0.01
+  mainrt: 0.01
+  mainso: 0.003
+  tref: 25.0
+  q10: 2.0
+  # Growth conversion costs (kg CH2O / kg DM)
+  crglv: 1.326
+  crgst: 1.326
+  crgrt: 1.326
+  crgso: 1.462
+
+photosynthesis:
+  # Section 3.2.2, Eqs 3.5-3.7
+  kdf: 0.4         # Extinction coefficient for diffuse PAR
+  amax_ref: 40.0   # Max leaf photosynthesis (kg CO2 / ha leaf / h)
+  eff_ref: 0.45    # Initial light-use efficiency
+
+spikelets:
+  # Section 3.2.8, Eq 3.31
+  spgf: 65000.0    # Spikelet formation factor (spikelets / kg DM)
