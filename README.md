@@ -1,8 +1,8 @@
 # Psychoacoustic Rice Growth Simulator
 
-No published model can yet predict, from first principles, how a given sound frequency will reshape rice crop physiology. This project is a research tool that gets as close as current evidence allows: a mechanistically-informed interpolation engine that couples sound treatments into an ORYZA-style rice growth model. It is **more than a lookup table, less than a predictive model**.
+No published model or digital tool can yet demonstrate, from first principles, how a given sound frequency will influence crop physiology. This project is a research tool that gets as close as current evidence allows: a mechanistically-informed interpolation engine that couples sound treatments into an ORYZA-style rice growth model. It is **more than a lookup table, but less than a predictive model (due to scarcity of input data and not lack of will)**.
 
-Built for researchers probing phytoacoustic treatments — not as a farm recommendation engine.
+Built for researchers probing phytoacoustic treatments.
 
 ---
 
