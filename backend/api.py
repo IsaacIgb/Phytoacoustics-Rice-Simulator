@@ -14,7 +14,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 
 from rice_core import (
     RiceState, SimulationConfig, WeatherDay, SoundDriver,
-    run_simulation, build_sound_driver,
+    DualPhaseSoundParams, run_simulation, run_simulation_dual_phase, build_sound_driver,
 )
 from sound_response import estimate_all_effects
 from acoustics import FieldConfig, compute_field_spl
@@ -80,23 +80,42 @@ def run_simulation_pipeline(params: dict) -> dict:
     baseline_history = run_simulation(rice_config)
     baseline_final = baseline_history[-1]
 
-    # 2. Compute sound effects
+    # 2. Compute sound effects — dual-phase (germination vs seedling-to-harvest)
+    # Germination phase (days 1-10): use germ_* params if provided
+    # Vegetative phase (days 11+):   use main freq/spl/hours params
     freq = float(params.get("frequency_hz", 1000))
     spl = float(params.get("spl_db_at_1m", 85))
     hours = float(params.get("hours_per_day", 3))
     stage = params.get("stage_bucket", "mixed")
     stress_ctx = "drought" if rice_config.water_regime == "drought" else "well_watered"
 
+    # Germination-phase parameters (fall back to main params if not specified)
+    germ_freq = float(params.get("germ_frequency_hz", freq))
+    germ_spl = float(params.get("germ_spl_db_at_1m", spl))
+    germ_hours = float(params.get("germ_hours_per_day", hours))
+    germ_days = int(params.get("germination_days", 10))
+
+    # Germination sound effects (stage_bucket = "germination")
+    germ_effects = estimate_all_effects(
+        frequency_hz=germ_freq, spl_db=germ_spl, hours_per_day=germ_hours,
+        stage_bucket="germination", stress_context=stress_ctx, data_dir=DATA_DIR,
+    )
+    germ_driver = build_sound_driver(germ_effects)
+
+    # Vegetative/harvest sound effects (uses main params, stage_bucket as given)
     sound_effects = estimate_all_effects(
         frequency_hz=freq, spl_db=spl, hours_per_day=hours,
         stage_bucket=stage, stress_context=stress_ctx, data_dir=DATA_DIR,
     )
+    veg_driver = build_sound_driver(sound_effects)
 
-    # 3. Build SoundDriver and run TREATED simulation
-    # Sound is active for sound_treatment_days, then crop finishes to maturity
-    sd = build_sound_driver(sound_effects)
-    treated_history = run_simulation(rice_config, sound_driver=sd,
-                                     sound_treatment_days=sound_treatment_days)
+    # 3. Run TREATED simulation with dual-phase drivers
+    dual_phase = DualPhaseSoundParams(
+        germination_driver=germ_driver,
+        vegetative_driver=veg_driver,
+        germination_days=germ_days,
+    )
+    treated_history = run_simulation_dual_phase(rice_config, dual_phase=dual_phase)
     treated_final = treated_history[-1]
 
     # 4. Derive canopy height from simulated stem weight (WST)

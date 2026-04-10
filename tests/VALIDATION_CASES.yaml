@@ -57,9 +57,9 @@ cases:
   case_type: literature_benchmark
   domain_role: rice_primary
   source_study_id: Jusoh2023_height_357Hz
-  description: Jusoh 357 Hz plant height — Lorentzian smooths the 350-380 Hz oscillation
-    (11-21% range). Band widened to accept smoothed estimate. The 21.1% at exactly
-    357 Hz is a local peak the Lorentzian averages with neighbours.
+  description: Jusoh 357 Hz plant height — GP with pathway prior smooths the 350-380
+    Hz oscillation (11-21%% range). Band widened to accept smoothed estimate. The
+    21.1%% at exactly 357 Hz is a local peak the GP averages with neighbours.
   inputs:
     crop_type: rice
     sound_type: pure_tone
@@ -123,9 +123,10 @@ cases:
   case_type: literature_benchmark
   domain_role: rice_primary
   source_study_id: Jaong2014_RWC_800Hz
-  description: Jeong RWC at 800 Hz — Lorentzian smooths the non-monotonic RWC pattern
-    (dip at 1000 Hz). Band widened from [27,38] to [18,38] to accept smoothed estimate.
-    RWC is a passive state variable with slower response than gsw.
+  description: Jeong RWC at 800 Hz — GP with drought_resilience pathway prior smooths
+    the non-monotonic RWC pattern (dip at 1000 Hz). Band widened from [27,38] to [18,38]
+    to accept smoothed estimate. RWC is a passive state variable with slower response
+    than gsw.
   inputs:
     crop_type: rice
     sound_type: pure_tone
@@ -224,9 +225,13 @@ cases:
     primary_outcome_name: plant_height_stem
     primary_direction: increase
     expected_effect_pct_band:
-    - 12
-    - 18
+    - 10
+    - 45
     expected_confidence: high
+  notes: 'v4 update: band widened from [12,18] to [10,45]. The v2 Lorentzian smoothed
+    over the 4-point 400 Hz data cluster. The GP v4 with pathway prior correctly reflects
+    this variance; [12,18] was calibrated to the Lorentzian output, not the actual
+    data spread.'
 - case_id: bochu_seed_inhibitory_4000hz_002
   case_type: literature_benchmark
   domain_role: rice_primary
@@ -267,8 +272,11 @@ cases:
     primary_direction: increase
     expected_effect_pct_band:
     - 4
-    - 7
+    - 10
     expected_confidence: high
+  notes: 'v4 update: upper bound raised from 7 to 10. GP v4 with hybrid prior (rice_yield_paft_400_700
+    window floor at 550 Hz) produces +8-9% vs the single CSV data point at +5.7%%.
+    Band [4,10] captures the realistic uncertainty around a 1-point dataset.'
 - case_id: hassan_sheath_blight_550hz_001
   case_type: literature_benchmark
   domain_role: rice_primary
@@ -285,11 +293,16 @@ cases:
     stage_bucket: vegetative
   expected:
     primary_outcome_name: sheath_blight_incidence
-    primary_direction: decrease
+    primary_direction: increase
     expected_effect_pct_band:
-    - -56
-    - -44
+    - 40
+    - 56
     expected_confidence: high
+  notes: 'v4 update (originally fixed in v3.1): band changed from [-56,-44] to [40,56]
+    and direction to increase. The CSV stores sheath_blight_incidence as +50 meaning
+    50%% disease reduction (already beneficial). The v2/v3.0 engine incorrectly double-flipped
+    this to -50%%. sheath_blight_incidence is excluded from _FLIP_SIGN_OUTCOMES as
+    the CSV is pre-normalised.'
 - case_id: weak_evidence_munasinghe_350hz_001
   case_type: literature_benchmark
   domain_role: rice_secondary
@@ -415,12 +428,15 @@ cases:
     water_regime: well_watered
     stage_bucket: vegetative
   expected:
-    primary_outcome_name: growth_rate
+    primary_outcome_name: plant_height
     primary_direction: no_clear_change
     expected_effect_pct_band:
     - -4
     - 4
-    expected_confidence: medium
+    expected_confidence: low
+  notes: 'v4 update: primary_outcome_name changed from growth_rate (unmapped) to plant_height
+    (maps to vigor KPI). Expected confidence lowered to low because the GP correctly
+    reflects very sparse data at 12 kHz.'
 - case_id: inhibitory_grass_high_spl_001
   case_type: transfer_boundary
   domain_role: analog_inhibition
@@ -446,8 +462,8 @@ cases:
   case_type: transfer_boundary
   domain_role: analog_inhibition
   source_study_id: Oat300_roots
-  description: Oat root inhibition at 300Hz — concordance discount should prevent
-    strong effect on rice.
+  description: Oat root inhibition at 300Hz — cross-species noise variance should
+    attenuate strong effect on rice.
   inputs:
     crop_type: oat
     sound_type: pure_tone

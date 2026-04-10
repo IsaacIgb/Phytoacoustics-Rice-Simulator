@@ -1,5 +1,5 @@
 """
-test_validation_cases.py — Validation harness v3.
+test_validation_cases.py — Validation harness v4.
 
 Tests against VALIDATION_CASES.yaml (version 3) using rice_sound_master_v2.csv.
 Maps primary_outcome_name to KPI categories and checks effect ranges.
@@ -34,7 +34,7 @@ OUTCOME_TO_KPI = {
     "germination_pct": "germination",
     "yield": "yield",
     "yield_kg_ha": "yield",
-    # Water sub-KPIs — three independent Lorentzian tracks
+    # Water sub-KPIs — three independent GP tracks (gsw_drought, gsw_wellwatered, rwc, iWUE)
     "stomatal_conductance_drought": "water_status_gsw_drought",
     "stomatal_conductance": "water_status_gsw_wellwatered",
     "gsw": "water_status_gsw_wellwatered",
@@ -165,7 +165,7 @@ def main():
         vc = yaml.safe_load(f)
 
     print(f"\n{'='*70}")
-    print(f"VALIDATION HARNESS v3 — Rice Sound Simulator")
+    print(f"VALIDATION HARNESS v4 — Rice Sound Simulator")
     print(f"Dataset: rice_sound_master_v2.csv")
     print(f"{'='*70}\n")
 
@@ -239,7 +239,7 @@ def main():
     # Write report
     report_path = os.path.join(os.path.dirname(__file__), "VALIDATION_REPORT.md")
     with open(report_path, "w") as f:
-        f.write(f"# Validation Report v3\n\n")
+        f.write(f"# Validation Report v4\n\n")
         f.write(f"Dataset: rice_sound_master_v2.csv\n\n")
         f.write(f"**{results['PASS']} PASS, {results['PARTIAL']} PARTIAL, {results['FAIL']} FAIL** / {total} total\n\n")
         f.write("| Case | Role | Status | Details |\n|---|---|---|---|\n")
