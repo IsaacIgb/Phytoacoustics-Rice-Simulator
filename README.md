@@ -8,41 +8,41 @@ Built for researchers probing phytoacoustic treatments.
 
 ## What it does
 
-The simulator combines four systems:
+For each day and sound regime, it:
 
-1. **Rice growth engine**
-   Daily-step crop simulation simplified from ORYZA2000 (Bouman et al. 2001), driven by real RREC 2022 weather from Stuttgart, AR. Baseline IR72 yield is ~7.3 t/ha and matches USDA-ARS field observations.
+1. Estimates plant-level SPL from the speaker layout using inverse-distance acoustics.
+2. Computes the mechanotransduction latent `S_mech,air(f, SPL)` using:
+   - an SPL activation curve,
+   - a frequency-trained mechanosensory response model,
+   - a high-frequency airborne decay term.
+3. Uses this latent to drive pathway activations and form an outcome-specific mechanistic prior.
+4. Fits Gaussian Processes to the residual effects with heteroscedastic noise based on study reliability and species.
+5. Maps predicted effect sizes and confidence scores into daily modifiers on photosynthesis, LAI growth, water stress, stress penalties, and yield in the ORYZA-style crop engine.
 
-2. **Sound-response engine (v4)**
-   Estimates how pure-tone sound modifies rice physiology using:
-   - A **mechanotransduction latent** S_mech,air(f, SPL) that encodes mechanosensory activation from frequency and local SPL.
-   - A small set of **pathway activations** (seed-vigor, leaf gas exchange, drought resilience, membrane damage, ultrasound cavitation) that act as a mechanistic prior over outcomes.
-   - Outcome-specific **Gaussian Processes on residuals** (Matérn 5/2, heteroscedastic noise) that correct this prior where data exist.
-
-   It produces effect percentages and confidence scores for photosynthesis, vigor, water status sub-KPIs, stress resilience and yield. iWUE uses nearest-neighbour (standing-wave artefacts), and ultrasound (≥20 kHz) uses a separate cavitation lookup.
-
-3. **Acoustics model**
-   Free-field inverse-distance SPL distribution across a configurable speaker layout, with canopy-level SPL estimates and simple coverage metrics.
-
-4. **RREC farm baseline**
-   Plot-level yield and phenology for 152 plots and 21 cultivars at the USDA-ARS Dale Bumpers National Rice Research Center (Farag et al. 2024). Results are shown as deltas against typical hybrid, inbred and traditional yields.
-
----
+Ultrasound seed soaks (`20–40 kHz`) and iWUE remain special-case pathways that bypass the main GP-mechanotransduction route.
 
 ## How to interpret it
 
-- The sound engine is a **literature-guided hypothesis generator**, not a dose-response oracle.
-- Mechanistic structure appears as:
-  - SPL floor/ceiling and high-SPL caution band.
-  - Mechanotransduction latent and pathway prior that encode which bands and stages should respond.
-- The GPs then interpolate **residuals** around that prior, with uncertainty that grows rapidly away from data.
+The sound engine is a **literature-guided hypothesis generator**, not a dose-response oracle.
 
 Confidence scores reflect **proximity to available evidence and model uncertainty**, not real-world accuracy at a given farm.
+
+At the end of each simulation, you will see your sound exposure's ('treatment') results benchmarked against the RREC and non-treatment baselines for plot-level yield and phenology data. You will also see and using also see a coverage map of canopy-level SPL and simple coverage metrics. 
 
 For full equations and assumptions, see:
 
 - `docs/MATH_SPEC.md` — complete mathematical specification
 - `docs/MODEL_NOTES.md` — architecture, theoretical framework, limitations
+
+---
+
+## Dual-phase UI
+
+The UI separates sound treatment into:
+- **Germination phase (days 1–10):** `GerminationSoundDriver` — stage bucket `"germination"`, typically higher SPL for seed coat penetration (Bochu 2003: 400 Hz / 106 dB).
+- **Seedling-to-harvest (days 11+):** `VegetativeSoundDriver` — stage bucket `"seedling"` or `"vegetative"`, moderate SPL for stomatal and photosynthetic effects (Jusoh 2023: 350 Hz / 68 dB).
+
+Both phases are configured independently in the API. The backend uses `DualPhaseSoundParams` and `run_simulation_dual_phase()` in `rice_core.py`.
 
 ---
 
@@ -76,33 +76,6 @@ python backend/api.py
 ```
 
 Then open `http://localhost:8000` in your browser.
-
----
-
-## Sound algorithm (v4) in one paragraph
-
-For each day and sound regime, the engine:
-
-1. Computes local SPL at the plant from speaker layout and inverse-distance acoustics.
-2. Computes S_mech,air(f, SPL) from:
-   - an SPL activation curve (60–100 dB band, damage ceiling at 110 dB),
-   - a MechActivation GP over frequency trained on stress-pathway KPIs,
-   - a high-frequency airborne decay (5–15 kHz).
-3. Uses S_mech,air to drive pathway activations and an outcome-specific mechanistic prior.
-4. Fits outcome GPs to **residuals** (observed − prior) with heteroscedastic noise from study reliability and species.
-5. Maps predicted effects into daily modifiers on photosynthesis, LAI growth, water stress and stress penalties in the ORYZA-style crop engine.
-
-Ultrasound seed soaks (20–40 kHz) and iWUE remain special pathways that bypass the GP and the mechanotransduction latent.
-
----
-
-## Dual-phase sound drivers
-
-The UI separates sound treatment into:
-- **Germination phase (days 1–10):** `GerminationSoundDriver` — stage bucket `"germination"`, typically higher SPL for seed coat penetration (Bochu 2003: 400 Hz / 106 dB).
-- **Seedling-to-harvest (days 11+):** `VegetativeSoundDriver` — stage bucket `"seedling"` or `"vegetative"`, moderate SPL for stomatal and photosynthetic effects (Jusoh 2023: 350 Hz / 68 dB).
-
-Both phases are configured independently in the API. The backend uses `DualPhaseSoundParams` and `run_simulation_dual_phase()` in `rice_core.py`.
 
 ---
 
